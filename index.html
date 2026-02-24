@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Santiago — Wizard 4</title>
+<style>
+  :root {
+    --bg: #1a1a2e;
+    --surface: #16213e;
+    --card: #0f3460;
+    --accent: #e94560;
+    --gold: #f0c040;
+    --text: #e0e0e0;
+    --muted: #8899aa;
+    --green: #4ade80;
+    --blue: #60a5fa;
+    --purple: #c084fc;
+    --red: #f87171;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 12px;
+    max-width: 480px;
+    margin: 0 auto;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    padding: 16px 0 12px;
+    border-bottom: 2px solid var(--accent);
+    margin-bottom: 12px;
+  }
+  .header h1 { font-size: 28px; color: var(--gold); letter-spacing: 1px; }
+  .header .subtitle { color: var(--muted); font-size: 14px; margin-top: 4px; }
+  .header .level-badge {
+    display: inline-block;
+    background: var(--accent);
+    color: white;
+    padding: 2px 12px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 6px;
+  }
+
+  /* Quick Stats Bar */
+  .quick-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .stat-box {
+    background: var(--card);
+    border-radius: 8px;
+    padding: 8px 4px;
+    text-align: center;
+  }
+  .stat-box .label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-box .value { font-size: 22px; font-weight: 700; color: var(--gold); }
+
+  /* Sections */
+  .section {
+    background: var(--surface);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+  .section-header {
+    background: var(--card);
+    padding: 10px 14px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none;
+  }
+  .section-header::after {
+    content: '▼';
+    font-size: 10px;
+    color: var(--muted);
+    transition: transform 0.2s;
+  }
+  .section.collapsed .section-header::after { transform: rotate(-90deg); }
+  .section.collapsed .section-body { display: none; }
+  .section-body { padding: 10px 14px; }
+
+  /* Attributes Grid */
+  .attr-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .attr-item {
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 8px;
+    text-align: center;
+  }
+  .attr-item .attr-name { font-size: 10px; color: var(--muted); text-transform: uppercase; }
+  .attr-item .attr-val { font-size: 24px; font-weight: 700; }
+  .attr-item .attr-mod { font-size: 14px; color: var(--gold); }
+
+  /* Skills */
+  .skill-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 3px 0;
+    font-size: 13px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .skill-row.prof { color: var(--green); font-weight: 600; }
+  .skill-row .mod { color: var(--gold); min-width: 24px; text-align: right; }
+
+  /* Spell Slots */
+  .slot-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
+  .slot-row .level-label { min-width: 80px; font-weight: 600; }
+  .slot-circles { display: flex; gap: 6px; }
+  .slot-circle {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 2px solid var(--gold);
+    cursor: pointer;
+    transition: background 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .slot-circle.used { background: var(--accent); border-color: var(--accent); }
+  .slot-circle.used::after { content: '✕'; font-size: 12px; color: white; }
+
+  /* Spell Cards */
+  .spell-card {
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    border-left: 3px solid var(--blue);
+  }
+  .spell-card.cantrip { border-left-color: var(--green); }
+  .spell-card.reaction { border-left-color: var(--red); }
+  .spell-card.fey { border-left-color: var(--purple); }
+  .spell-card.ritual { border-left-color: var(--muted); }
+  .spell-name {
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 3px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .spell-tag {
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+  .tag-cantrip { background: var(--green); color: #000; }
+  .tag-reaction { background: var(--red); color: #fff; }
+  .tag-ritual { background: var(--muted); color: #000; }
+  .tag-conc { background: #f59e0b; color: #000; }
+  .tag-fey { background: var(--purple); color: #000; }
+  .tag-bonus { background: var(--purple); color: #000; }
+  .spell-desc { font-size: 12px; color: var(--muted); line-height: 1.4; }
+
+  /* Combat Quick Ref */
+  .combat-action {
+    background: var(--bg);
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin-bottom: 6px;
+    font-size: 13px;
+  }
+  .combat-action strong { color: var(--gold); }
+
+  /* HP Tracker */
+  .hp-tracker {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    justify-content: center;
+    padding: 8px 0;
+  }
+  .hp-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: none;
+    font-size: 20px;
+    font-weight: 700;
+    cursor: pointer;
+    color: white;
+  }
+  .hp-btn.minus { background: var(--accent); }
+  .hp-btn.plus { background: var(--green); color: #000; }
+  .hp-display {
+    font-size: 32px;
+    font-weight: 700;
+    min-width: 80px;
+    text-align: center;
+  }
+  .hp-display .hp-max { font-size: 16px; color: var(--muted); }
+
+  /* Features */
+  .feature-item {
+    background: var(--bg);
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin-bottom: 6px;
+  }
+  .feature-item .fname { font-weight: 700; font-size: 13px; color: var(--gold); }
+  .feature-item .fdesc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  /* Backstory */
+  .backstory { font-size: 13px; line-height: 1.6; color: var(--muted); }
+  .backstory strong { color: var(--text); }
+
+  /* Prepared indicator */
+  .prepared-badge {
+    display: inline-block;
+    width: 8px; height: 8px;
+    background: var(--green);
+    border-radius: 50%;
+    margin-right: 4px;
+    vertical-align: middle;
+  }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    padding: 16px 0;
+    color: var(--muted);
+    font-size: 11px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>⚡ SANTIAGO</h1>
+  <div class="subtitle">Human (Variant) · Order of Scribes · Neutral Good</div>
+  <div class="level-badge">WIZARD 4</div>
+</div>
+
+<!-- Quick Stats -->
+<div class="quick-stats">
+  <div class="stat-box"><div class="label">AC</div><div class="value">15</div></div>
+  <div class="stat-box"><div class="label">Init</div><div class="value">+2</div></div>
+  <div class="stat-box"><div class="label">Speed</div><div class="value">30</div></div>
+  <div class="stat-box"><div class="label">DC</div><div class="value">14</div></div>
+</div>
+
+<!-- HP Tracker -->
+<div class="section">
+  <div class="section-header">❤️ HIT POINTS</div>
+  <div class="section-body">
+    <div class="hp-tracker">
+      <button class="hp-btn minus" onclick="changeHP(-1)">−</button>
+      <div class="hp-display"><span id="currentHP">26</span><span class="hp-max"> / 26</span></div>
+      <button class="hp-btn plus" onclick="changeHP(1)">+</button>
+    </div>
+    <div style="text-align:center;font-size:12px;color:var(--muted)">Hit Dice: 4d6 · Tap to track damage</div>
+  </div>
+</div>
+
+<!-- Spell Slots -->
+<div class="section">
+  <div class="section-header">🔮 SPELL SLOTS</div>
+  <div class="section-body">
+    <div class="slot-row">
+      <span class="level-label">1st Level</span>
+      <div class="slot-circles">
+        <div class="slot-circle" onclick="toggleSlot(this)"></div>
+        <div class="slot-circle" onclick="toggleSlot(this)"></div>
+        <div class="slot-circle" onclick="toggleSlot(this)"></div>
+        <div class="slot-circle" onclick="toggleSlot(this)"></div>
+      </div>
+    </div>
+    <div class="slot-row">
+      <span class="level-label">2nd Level</span>
+      <div class="slot-circles">
+        <div class="slot-circle" onclick="toggleSlot(this)"></div>
+        <div class="slot-circle" onclick="toggleSlot(this)"></div>
+        <div class="slot-circle" onclick="toggleSlot(this)"></div>
+      </div>
+    </div>
+    <div style="margin-top:8px;font-size:12px;">
+      <strong style="color:var(--purple)">Fey Touched (1x/LR each):</strong>
+      <div style="display:flex;gap:12px;margin-top:4px;">
+        <span class="slot-circle" onclick="toggleSlot(this)" style="width:24px;height:24px;border-color:var(--purple);font-size:10px"></span> Misty Step
+        <span class="slot-circle" onclick="toggleSlot(this)" style="width:24px;height:24px;border-color:var(--purple);font-size:10px"></span> Silvery Barbs
+      </div>
+    </div>
+    <div style="margin-top:8px;font-size:12px;">
+      <strong style="color:var(--blue)">Arcane Recovery (1x/SR):</strong> Recupera 2 níveis de slots
+      <div style="margin-top:4px;">
+        <span class="slot-circle" onclick="toggleSlot(this)" style="width:24px;height:24px;border-color:var(--blue);font-size:10px"></span> Usado
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Combat Quick Ref -->
+<div class="section">
+  <div class="section-header">⚔️ COMBAT CHEAT SHEET</div>
+  <div class="section-body">
+    <div class="combat-action"><strong>Turn Start:</strong> Mage Armor ativo? (AC 15 vs 12)</div>
+    <div class="combat-action"><strong>Action:</strong> Mind Sliver (1d6 psychic + -1d4 next save) OU Cast Spell</div>
+    <div class="combat-action"><strong>Bonus Action:</strong> Misty Step (teleporte 30ft — FUGA)</div>
+    <div class="combat-action"><strong>Reaction — HIT:</strong> Shield (+5 AC) ou Absorb Elements (resist + 1d6)</div>
+    <div class="combat-action"><strong>Reaction — ENEMY SUCCEEDS:</strong> Silvery Barbs (reroll + ally advantage)</div>
+    <div class="combat-action"><strong>Concentration check:</strong> DC 10 ou metade do dano (o que for maior)</div>
+    <div class="combat-action"><strong>Awakened Spellbook:</strong> Pode trocar tipo de dano por outro do spellbook</div>
+  </div>
+</div>
+
+<!-- Prepared Spells -->
+<div class="section">
+  <div class="section-header">📖 SPELLS PREPARADAS (8)</div>
+  <div class="section-body">
+
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">CANTRIPS — sempre disponíveis</div>
+
+    <div class="spell-card cantrip">
+      <div class="spell-name">Mind Sliver <span class="spell-tag tag-cantrip">CANTRIP</span></div>
+      <div class="spell-desc">60ft · INT save DC 14 · <strong>1d6 psychic</strong> · Alvo sofre <strong>-1d4</strong> no próximo saving throw. Combo perfeito antes de Web/Grease.</div>
+    </div>
+    <div class="spell-card cantrip">
+      <div class="spell-name">Dancing Lights <span class="spell-tag tag-conc">CONC</span></div>
+      <div class="spell-desc">120ft · 4 luzes (tochas/orbes) por 1 min. Iluminação e distração.</div>
+    </div>
+    <div class="spell-card cantrip">
+      <div class="spell-name">Mage Hand <span class="spell-tag tag-cantrip">CANTRIP</span></div>
+      <div class="spell-desc">30ft · Mão espectral. Manipula objetos, abre portas, distrai.</div>
+    </div>
+
+    <div style="font-size:11px;color:var(--muted);margin:12px 0 8px;">1st LEVEL — PREPARADAS</div>
+
+    <div class="spell-card reaction">
+      <div class="spell-name"><span class="prepared-badge"></span>Shield <span class="spell-tag tag-reaction">REACTION</span></div>
+      <div class="spell-desc">Quando atingido: <strong>+5 AC</strong> até próximo turno. AC fica 20!</div>
+    </div>
+    <div class="spell-card reaction">
+      <div class="spell-name"><span class="prepared-badge"></span>Absorb Elements <span class="spell-tag tag-reaction">REACTION</span></div>
+      <div class="spell-desc">Ao tomar acid/cold/fire/lightning/thunder: <strong>resistência</strong> ao tipo + próximo melee dá +1d6.</div>
+    </div>
+    <div class="spell-card">
+      <div class="spell-name"><span class="prepared-badge"></span>Mage Armor</div>
+      <div class="spell-desc">8h sem concentração. AC = 13 + DEX = <strong>15</strong>. Lançar no início do dia.</div>
+    </div>
+    <div class="spell-card">
+      <div class="spell-name"><span class="prepared-badge"></span>Sleep</div>
+      <div class="spell-desc">90ft · 5d8 HP de criaturas adormecem (começando pelo HP mais baixo). Sem save! Bom contra múltiplos fracos.</div>
+    </div>
+    <div class="spell-card">
+      <div class="spell-name"><span class="prepared-badge"></span>Grease</div>
+      <div class="spell-desc">60ft · Área 10ft · DEX save ou <strong>prone</strong>. Terreno difícil. Sem concentração!</div>
+    </div>
+    <div class="spell-card">
+      <div class="spell-name"><span class="prepared-badge"></span>Fog Cloud <span class="spell-tag tag-conc">CONC</span></div>
+      <div class="spell-desc">120ft · Esfera 20ft · Heavily obscured. Fuga, reset de ranged, bloqueia linha de visão.</div>
+    </div>
+
+    <div style="font-size:11px;color:var(--muted);margin:12px 0 8px;">2nd LEVEL — PREPARADAS</div>
+
+    <div class="spell-card">
+      <div class="spell-name"><span class="prepared-badge"></span>Web <span class="spell-tag tag-conc">CONC</span></div>
+      <div class="spell-desc">60ft · Cubo 20ft · STR save ou <strong>Restrained</strong>. Controle de área top. Inflamável!</div>
+    </div>
+    <div class="spell-card">
+      <div class="spell-name"><span class="prepared-badge"></span>Mirror Image</div>
+      <div class="spell-desc">1 min · 3 duplicatas. Ataques podem errar mirando a cópia. <strong>Sem concentração!</strong></div>
+    </div>
+
+    <div style="font-size:11px;color:var(--muted);margin:12px 0 8px;">FEY TOUCHED — 1x/Long Rest FREE</div>
+
+    <div class="spell-card fey">
+      <div class="spell-name">Misty Step <span class="spell-tag tag-bonus">BONUS</span></div>
+      <div class="spell-desc">Teleporte <strong>30ft</strong> como bonus action. Fuga, reposicionamento. Pode usar slot também.</div>
+    </div>
+    <div class="spell-card fey">
+      <div class="spell-name">Silvery Barbs <span class="spell-tag tag-reaction">REACTION</span></div>
+      <div class="spell-desc">Inimigo acerta d20: <strong>forçar reroll</strong>. Um aliado ganha <strong>advantage</strong> no próximo d20. Absurdamente forte.</div>
+    </div>
+
+    <div style="font-size:11px;color:var(--muted);margin:12px 0 8px;">RITUAIS (não precisa preparar)</div>
+
+    <div class="spell-card ritual">
+      <div class="spell-name">Detect Magic <span class="spell-tag tag-ritual">RITUAL</span></div>
+      <div class="spell-desc">30ft · Detecta magia e escola. 10 min casting como ritual. Exploração essencial.</div>
+    </div>
+    <div class="spell-card ritual">
+      <div class="spell-name">Find Familiar <span class="spell-tag tag-ritual">RITUAL</span></div>
+      <div class="spell-desc">Invoca familiar (owl = flyby help action). Scout, Help action, entrega tochas.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Attributes -->
+<div class="section collapsed">
+  <div class="section-header">📊 ATTRIBUTES</div>
+  <div class="section-body">
+    <div class="attr-grid">
+      <div class="attr-item"><div class="attr-name">STR</div><div class="attr-val">9</div><div class="attr-mod">-1</div></div>
+      <div class="attr-item"><div class="attr-name">DEX</div><div class="attr-val">14</div><div class="attr-mod">+2</div></div>
+      <div class="attr-item"><div class="attr-name">CON</div><div class="attr-val">15</div><div class="attr-mod">+2</div></div>
+      <div class="attr-item"><div class="attr-name">INT</div><div class="attr-val" style="color:var(--gold)">18</div><div class="attr-mod">+4</div></div>
+      <div class="attr-item"><div class="attr-name">WIS</div><div class="attr-val">12</div><div class="attr-mod">+1</div></div>
+      <div class="attr-item"><div class="attr-name">CHA</div><div class="attr-val">12</div><div class="attr-mod">+1</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Saves & Skills -->
+<div class="section collapsed">
+  <div class="section-header">🎯 SAVES & SKILLS</div>
+  <div class="section-body">
+    <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">SAVING THROWS</div>
+    <div class="skill-row"><span>STR</span><span class="mod">-1</span></div>
+    <div class="skill-row"><span>DEX</span><span class="mod">+2</span></div>
+    <div class="skill-row"><span>CON</span><span class="mod">+2</span></div>
+    <div class="skill-row prof"><span>● INT</span><span class="mod">+6</span></div>
+    <div class="skill-row prof"><span>● WIS</span><span class="mod">+3</span></div>
+    <div class="skill-row"><span>CHA</span><span class="mod">+1</span></div>
+
+    <div style="font-size:11px;color:var(--muted);margin:12px 0 6px;">PROFICIENT SKILLS</div>
+    <div class="skill-row prof"><span>● Arcana (INT)</span><span class="mod">+6</span></div>
+    <div class="skill-row prof"><span>● History (INT)</span><span class="mod">+6</span></div>
+    <div class="skill-row prof"><span>● Investigation (INT)</span><span class="mod">+6</span></div>
+    <div class="skill-row prof"><span>● Survival (WIS)</span><span class="mod">+3</span></div>
+
+    <div style="font-size:11px;color:var(--muted);margin:12px 0 6px;">OTHER SKILLS</div>
+    <div class="skill-row"><span>Acrobatics (DEX)</span><span class="mod">+2</span></div>
+    <div class="skill-row"><span>Animal Handling (WIS)</span><span class="mod">+1</span></div>
+    <div class="skill-row"><span>Athletics (STR)</span><span class="mod">-1</span></div>
+    <div class="skill-row"><span>Deception (CHA)</span><span class="mod">+1</span></div>
+    <div class="skill-row"><span>Insight (WIS)</span><span class="mod">+1</span></div>
+    <div class="skill-row"><span>Intimidation (CHA)</span><span class="mod">+1</span></div>
+    <div class="skill-row"><span>Medicine (WIS)</span><span class="mod">+1</span></div>
+    <div class="skill-row"><span>Nature (INT)</span><span class="mod">+4</span></div>
+    <div class="skill-row"><span>Perception (WIS)</span><span class="mod">+1</span></div>
+    <div class="skill-row"><span>Performance (CHA)</span><span class="mod">+1</span></div>
+    <div class="skill-row"><span>Persuasion (CHA)</span><span class="mod">+1</span></div>
+    <div class="skill-row"><span>Religion (INT)</span><span class="mod">+4</span></div>
+    <div class="skill-row"><span>Sleight of Hand (DEX)</span><span class="mod">+2</span></div>
+    <div class="skill-row"><span>Stealth (DEX)</span><span class="mod">+2</span></div>
+    <div style="margin-top:8px;font-size:12px;color:var(--muted)">Passive Perception: 11</div>
+  </div>
+</div>
+
+<!-- Features -->
+<div class="section collapsed">
+  <div class="section-header">✨ FEATURES & TRAITS</div>
+  <div class="section-body">
+    <div class="feature-item">
+      <div class="fname">Awakened Spellbook</div>
+      <div class="fdesc">Sem componentes materiais sem custo GP · Troca tipo de dano por outro do livro · Rituais no tempo normal</div>
+    </div>
+    <div class="feature-item">
+      <div class="fname">Wizardly Quill</div>
+      <div class="fdesc">Cria pena mágica — copia magias em 2 min/nível (ao invés de 2h/nível)</div>
+    </div>
+    <div class="feature-item">
+      <div class="fname">Arcane Recovery (1x/Short Rest)</div>
+      <div class="fdesc">Recupera 2 níveis de spell slots (ex: 1x 2nd ou 2x 1st)</div>
+    </div>
+    <div class="feature-item">
+      <div class="fname">Fey Touched</div>
+      <div class="fdesc">Misty Step + Silvery Barbs 1x/Long Rest free (ou com slot)</div>
+    </div>
+  </div>
+</div>
+
+<!-- Equipment -->
+<div class="section collapsed">
+  <div class="section-header">🎒 EQUIPMENT</div>
+  <div class="section-body" style="font-size:13px;">
+    <div>📕 Spellbook (caderno da mãe)</div>
+    <div>🧿 Colar feérico</div>
+    <div>🗡️ Dagger (Atk +4, 1d4+2)</div>
+    <div>🎒 Component pouch</div>
+    <div>🏕️ Explorer's Pack</div>
+    <div>💰 15 GP</div>
+    <div style="margin-top:8px;font-size:12px;color:var(--muted)">
+      Languages: Common, Elvish, Sylvan<br>
+      Weapons: Daggers, darts, slings, quarterstaffs, light crossbows
+    </div>
+  </div>
+</div>
+
+<!-- Backstory -->
+<div class="section collapsed">
+  <div class="section-header">📜 SANTIAGO'S STORY</div>
+  <div class="section-body backstory">
+    <p><strong>Personality:</strong> Transformo a falta de respostas em disciplina. O tempo na clareira me ensinou que a realidade é mais fina do que parece.</p>
+    <p style="margin-top:8px"><strong>Ideal:</strong> Verdade — busco respostas, mesmo que doam.</p>
+    <p style="margin-top:8px"><strong>Bond:</strong> O cavalo roxo marcou minha família. Alguém nos tratou como peças. O caderno da minha mãe guarda segredos que ainda não decifrei. O colar prova que a clareira existiu.</p>
+    <p style="margin-top:8px"><strong>Flaw:</strong> Às vezes não sei se busco vingança ou verdade. Temo que não sejam a mesma coisa.</p>
+    <p style="margin-top:12px"><strong>Backstory:</strong> Sobrevivente do massacre da caravana na Floresta da Mortalha Negra aos 18 anos. Encontrou os pais mortos, com um cavalo de xadrez roxo sobre a mãe — uma assinatura. Passou 1,5 ano numa clareira feérica, treinado por uma mulher de traços élficos que o ensinou a sobreviver e registrar magia no caderno da mãe.</p>
+  </div>
+</div>
+
+<div class="footer">
+  Santiago · Wizard 4 · Order of Scribes<br>
+  Átrias Wiki · atrias-wiki.vercel.app
+</div>
+
+<script>
+// HP Tracker
+let currentHP = 26;
+const maxHP = 26;
+function changeHP(delta) {
+  currentHP = Math.max(0, Math.min(maxHP, currentHP + delta));
+  const el = document.getElementById('currentHP');
+  el.textContent = currentHP;
+  el.style.color = currentHP <= 6 ? 'var(--red)' : currentHP <= 13 ? '#f59e0b' : 'var(--text)';
+}
+
+// Spell Slot Toggle
+function toggleSlot(el) {
+  el.classList.toggle('used');
+}
+
+// Section Collapse
+document.querySelectorAll('.section-header').forEach(h => {
+  h.addEventListener('click', () => h.parentElement.classList.toggle('collapsed'));
+});
+</script>
+
+</body>
+</html>
